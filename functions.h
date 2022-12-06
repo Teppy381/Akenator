@@ -29,17 +29,24 @@ struct tree_node
     tree_node* left;
 };
 
-int CreateTreeFromFile(tree_node* node_p, const char* file_name);
+struct data_base
+{
+    tree_node* tree;
+    tree_node** answers_list;
+};
+
+int ReadDataFromFile(data_base* data_p, const char* file_name);
 
 
-void GetAll(char* str, tree_node* node_p, int* counter);
+void GetAll(char* str, tree_node* node_p, int* counter, tree_node** answers_list);
 
-void GetSomething(char* str, tree_node* node_p, int* counter);
+void GetSomething(char* str, tree_node* node_p, int* counter, tree_node** answers_list);
 
-void GetQuession(char* str, tree_node* node_p, int* counter);
+void GetQuession(char* str, tree_node* node_p, int* counter, tree_node** answers_list);
 
-void GetAnswer(char* str, tree_node* node_p, int* counter);
+void GetAnswer(char* str, tree_node* node_p, int* counter, tree_node** answers_list);
 
+void AddNodeToList(tree_node** answers_list, tree_node* node_p);
 
 // void CopyStrFor(char* dest, char* src, char stop_symbol);
 
@@ -47,9 +54,19 @@ char* ReadFile(FILE* text_input);
 
 int CountSimbols(FILE* text_input);
 
-int Akenator(tree_node* node_p);
+int Akenator(data_base* data_p);
 
 int AddQuestionNode(tree_node* node_p);
+
+int PrintOrigin(data_base* data_p, const char* str);
+
+int PrintParents(tree_node* node_p);
+
+int PrintAnswersAlphabetically(data_base* data_p);
+
+int SortAnswersAlphabetically(tree_node** answers_list);
+
+int AlphabetAnswersComparator(const void* answer1, const void* answer2);
 
 int BiQuestion();
 
@@ -57,7 +74,11 @@ void ClearInput();
 
 char* ScanStringColor(const char* color);
 
+int SaveDataToFile(data_base* data_p, FILE* file);
+
 int SaveTreeToFile(const tree_node* node_p, FILE* file);
+
+int FreeData(data_base* data_p);
 
 int FreeTree(tree_node* node_p);
 

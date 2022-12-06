@@ -5,16 +5,24 @@ Stupid?
 {
 Is higher 100 meters?
 Panorama
+{
+Is in Moscow?
 Empire State Building
+One Tower (in Moscow-city)
+}
 }
 {
 Animal?
 {
-Kek?
+Carries the toilet hith him?
 Sirenogoloviy
-{lol}
+Unitazogoloviy
 }
+{
+Has a lot of muscles?
 Blind cat
+Strong mole
+}
 }
 }
 {

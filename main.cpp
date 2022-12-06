@@ -5,13 +5,19 @@ int main ()
 {
     printf("\n");
 
-    tree_node tree = {};
-    CreateTreeFromFile(&tree, "data.txt");
+    data_base my_data = {};
+    ReadDataFromFile(&my_data, "data.txt");
 
-    Akenator(&tree);
 
-    FILE* my_data = fopen("data.txt", "w");
-    SaveTreeToFile(&tree, my_data);
+    // PrintOrigin(&my_data, "Spiner");
 
-    FreeTree(&tree);
+    // PrintAnswersAlphabetically(&my_data);
+
+    // Akenator(&my_data);
+
+
+    FILE* save_file = fopen("data.txt", "w");
+    SaveDataToFile(&my_data, save_file);
+
+    FreeData(&my_data);
 }

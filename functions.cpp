@@ -1,41 +1,47 @@
 #include "functions.h"
 
 
-int CreateTreeFromFile(tree_node* node_p, const char* file_name)
+int ReadDataFromFile(data_base* data_p, const char* file_name)
 {
     FILE* data_file = fopen(file_name, "r");
     char* buffer = ReadFile(data_file);
     fclose(data_file);
 
-    int counter = 0;
+    data_p->answers_list = (tree_node**) calloc(100, sizeof(tree_node*));
+    data_p->tree = (tree_node*) calloc(1, sizeof(tree_node));
 
-    GetAll(buffer, node_p, &counter);
+    int counter = 0;
+    GetAll(buffer, data_p->tree, &counter, data_p->answers_list);
 
     free(buffer);
     return 0;
 }
 
-void GetAll(char* str, tree_node* node_p, int* counter)
+void GetAll(char* str, tree_node* node_p, int* counter, tree_node** answers_list)
 {
-    GetSomething(str, node_p, counter);
+    CHECKUS(node_p != NULL, (void) 0);
+    GetSomething(str, node_p, counter, answers_list);
 
     CHECKUS(str[*counter] == '\0', (void) 0);
 }
 
-void GetSomething(char* str, tree_node* node_p, int* counter)
+void GetSomething(char* str, tree_node* node_p, int* counter, tree_node** answers_list)
 {
+    CHECKUS(node_p != NULL, (void) 0);
     if (str[*counter] == '{')
     {
-        GetQuession(str, node_p, counter);
+        GetQuession(str, node_p, counter, answers_list);
     }
     else
     {
-        GetAnswer(str, node_p, counter);
+        GetAnswer(str, node_p, counter, answers_list);
     }
 }
 
-void GetQuession(char* str, tree_node* node_p, int* counter)
+void GetQuession(char* str, tree_node* node_p, int* counter, tree_node** answers_list)
 {
+    CHECKUS(node_p != NULL, (void) 0);
+
     CHECKUS(str[*counter] == '{', (void) 0);
     (*counter)++;
     CHECKUS(str[*counter] == '\n', (void) 0);
@@ -52,12 +58,12 @@ void GetQuession(char* str, tree_node* node_p, int* counter)
     CHECKUS(str[*counter] == '\n', (void) 0);
     (*counter)++;
 
-    GetSomething(str, node_p->left, counter);
+    GetSomething(str, node_p->left, counter, answers_list);
 
     CHECKUS(str[*counter] == '\n', (void) 0);
     (*counter)++;
 
-    GetSomething(str, node_p->right, counter);
+    GetSomething(str, node_p->right, counter, answers_list);
 
     CHECKUS(str[*counter] == '\n', (void) 0);
     (*counter)++;
@@ -65,10 +71,26 @@ void GetQuession(char* str, tree_node* node_p, int* counter)
     (*counter)++;
 }
 
-void GetAnswer(char* str, tree_node* node_p, int* counter)
+void GetAnswer(char* str, tree_node* node_p, int* counter, tree_node** answers_list)
 {
+    CHECKUS(node_p != NULL, (void) 0);
     sscanf(&str[*counter], "%m[^\n]", &node_p->data);
     *counter += strlen(node_p->data);
+
+    AddNodeToList(answers_list, node_p);
+}
+
+
+void AddNodeToList(tree_node** answers_list, tree_node* node_p)
+{
+    CHECKUS(node_p != NULL, (void) 0);
+    CHECKUS(answers_list != 0, (void) 0);
+    int i = 0;
+    while (answers_list[i] != 0)
+    {
+        i++;
+    }
+    answers_list[i] = node_p;
 }
 
 
@@ -101,14 +123,14 @@ int CountSimbols(FILE* text_input)
     return simbol_amount;
 }
 
-int Akenator(tree_node* node_p)
+int Akenator(data_base* data_p)
 {
-
+    tree_node* node_p = data_p->tree;
     while (1)
     {
         if (node_p->left != 0 && node_p->right != 0) // green?
         {
-            printf("- %s?\n", node_p->data);
+            printf(MAGENTA "- %s?\n" CLR_COLOR, node_p->data);
             if (BiQuestion() == 1)
             {
                 node_p = node_p->right;
@@ -120,15 +142,15 @@ int Akenator(tree_node* node_p)
         }
         else if (node_p->left == 0 && node_p->right == 0) // Is it apple?
         {
-            printf("- Is it " INTENSE_RED "%s" CLR_COLOR "?\n", node_p->data);
+            printf(MAGENTA "- Is it " INTENSE_RED "%s" MAGENTA "?\n" CLR_COLOR, node_p->data);
             if (BiQuestion() == 1)
             {
-                printf("I knew that\n");
+                printf(MAGENTA "- I knew that\n" CLR_COLOR);
                 return 0;
             }
             else
             {
-                printf("- Now I'm sad (((\n");
+                printf(MAGENTA "- Now I'm sad (((\n" CLR_COLOR);
                 AddQuestionNode(node_p);
                 return 0;
             }
@@ -143,29 +165,104 @@ int Akenator(tree_node* node_p)
 
 int AddQuestionNode(tree_node* node_p)
 {
-    printf("- Can you say me what it was?\n");
+    printf(MAGENTA "- Can you say me what it was?\n" CLR_COLOR);
     if (BiQuestion() == 0)
     {
-        printf("- Now I'm sad (((\n");
+        printf(MAGENTA "- Now I'm sad (((\n\n" CLR_COLOR);
         return 0;
     }
 
 
-    printf("- Complete the sentence: It was ");
+    printf(MAGENTA "- Complete the sentence: " CLR_COLOR "It was ");
     char* buf1 = ScanStringColor(INTENSE_GREEN);
 
 
     AddRightBranch(node_p, buf1);
     AddLeftBranch(node_p, node_p->data);
 
-    printf("- Complete the sentence: Differience between " INTENSE_RED "%s" CLR_COLOR " and " INTENSE_GREEN "%s"
+    printf(MAGENTA "- Complete the sentence: " CLR_COLOR "Differience between " INTENSE_RED "%s" CLR_COLOR " and " INTENSE_GREEN "%s"
     CLR_COLOR " is that " INTENSE_GREEN "%s" CLR_COLOR " ", node_p->data, buf1, buf1);
     char* buf2 = ScanStringColor(INTENSE_BLUE);
 
     node_p->data = buf2;
 
-    printf("- Thanks, now I know everything!!!\n");
+    printf(MAGENTA "- Thanks, now I know everything!!!\n\n" CLR_COLOR);
     return 0;
+}
+
+
+int PrintOrigin(data_base* data_p, const char* str)
+{
+    CHECKUS(data_p != NULL, 1);
+
+    tree_node* buf_node_p = 0;
+    for (int i = 0; data_p->answers_list[i] != 0; i++)
+    {
+        if (strcmp(str, data_p->answers_list[i]->data) == 0)
+        {
+            buf_node_p = data_p->answers_list[i];
+            break;
+        }
+    }
+    if (buf_node_p == 0) // did not find
+    {
+        printf("Cannot find <%s> in data base\n", str);
+        return 1;
+    }
+
+    printf(MAGENTA "- Defenition of %s:\n" CLR_COLOR, str);
+    PrintParents(buf_node_p->parent);
+    printf("\n");
+    return 0;
+}
+
+int PrintParents(tree_node* node_p)
+{
+    CHECKUS(node_p != NULL, 1);
+
+    if (node_p->parent != 0)
+    {
+        PrintParents(node_p->parent);
+    }
+    printf("%s\n", node_p->data);
+    return 0;
+}
+
+int PrintAnswersAlphabetically(data_base* data_p)
+{
+    CHECKUS(data_p != NULL, 1);
+
+    tree_node** answers_list = data_p->answers_list;
+
+    SortAnswersAlphabetically(answers_list);
+
+    printf(MAGENTA "- Here is all things I know:\n" CLR_COLOR);
+    for (int i = 0; answers_list[i] != 0; i++)
+    {
+        printf("%i) %s\n", i + 1, answers_list[i]->data);
+    }
+    printf("\n");
+    return 0;
+}
+
+int SortAnswersAlphabetically(tree_node** answers_list)
+{
+    int answers_amount = 0;
+    while (answers_list[answers_amount] != 0)
+    {
+        answers_amount++;
+    }
+
+    qsort(answers_list, answers_amount, sizeof(tree_node*), AlphabetAnswersComparator);
+    return 0;
+}
+
+int AlphabetAnswersComparator(const void* answer1, const void* answer2)
+{
+    const char* str1 = (*(tree_node**)answer1)->data;
+    const char* str2 = (*(tree_node**)answer2)->data;
+
+    return strcmp(str1, str2);
 }
 
 int BiQuestion()
@@ -241,12 +338,15 @@ char* ScanStringColor(const char* color)
     return &str[first_letter]; // may be dangerous to return different pointer from that was calloced
 }
 
+int SaveDataToFile(data_base* data_p, FILE* file)
+{
+    SaveTreeToFile(data_p->tree, file);
+    return 0;
+}
+
 int SaveTreeToFile(const tree_node* node_p, FILE* file)
 {
-    if (node_p == 0)
-    {
-        return 0;
-    }
+    CHECKUS(node_p != NULL, 1);
 
     if (node_p->left != 0 && node_p->right != 0)
     {
@@ -259,6 +359,14 @@ int SaveTreeToFile(const tree_node* node_p, FILE* file)
     {
         fprintf(file, "%s\n", node_p->data);
     }
+    return 0;
+}
+
+
+int FreeData(data_base* data_p)
+{
+    FreeTree(data_p->tree);
+    free(data_p->answers_list);
     return 0;
 }
 
