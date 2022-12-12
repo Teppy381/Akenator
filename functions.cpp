@@ -4,11 +4,16 @@
 int ReadDataFromFile(data_base* data_p, const char* file_name)
 {
     FILE* data_file = fopen(file_name, "r");
+    if (data_file == NULL)
+    {
+        return 1;
+    }
     char* buffer = ReadFile(data_file);
     fclose(data_file);
 
     data_p->answers_list = (tree_node**) calloc(100, sizeof(tree_node*));
     data_p->tree = (tree_node*) calloc(1, sizeof(tree_node));
+    data_p->name = file_name;
 
     int counter = 0;
     GetAll(buffer, data_p->tree, &counter, data_p->answers_list);
@@ -20,9 +25,11 @@ int ReadDataFromFile(data_base* data_p, const char* file_name)
 void GetAll(char* str, tree_node* node_p, int* counter, tree_node** answers_list)
 {
     CHECKUS(node_p != NULL, (void) 0);
-    GetSomething(str, node_p, counter, answers_list);
 
-    CHECKUS(str[*counter] == '\0', (void) 0);
+    SkipSpaces(str, counter);
+    GetSomething(str, node_p, counter, answers_list);
+    SkipSpaces(str, counter);
+    CheckChar('\0', str, counter);
 }
 
 void GetSomething(char* str, tree_node* node_p, int* counter, tree_node** answers_list)
@@ -42,39 +49,32 @@ void GetQuession(char* str, tree_node* node_p, int* counter, tree_node** answers
 {
     CHECKUS(node_p != NULL, (void) 0);
 
-    CHECKUS(str[*counter] == '{', (void) 0);
-    (*counter)++;
-    CHECKUS(str[*counter] == '\n', (void) 0);
-    (*counter)++;
+    CheckChar('{', str, counter);
+    SkipSpaces(str, counter);
 
     AddLeftBranch(node_p, NULL);
     AddRightBranch(node_p, NULL);
 
-    sscanf(&str[*counter], "%m[^?\n]", &node_p->data);
+    sscanf(&str[*counter], "%m[^?\r\n]", &node_p->data);
     *counter += strlen(node_p->data);
 
-    CHECKUS(str[*counter] == '?', (void) 0);
-    (*counter)++;
-    CHECKUS(str[*counter] == '\n', (void) 0);
-    (*counter)++;
+    CheckChar('?', str, counter);
+    SkipSpaces(str, counter);
 
     GetSomething(str, node_p->left, counter, answers_list);
 
-    CHECKUS(str[*counter] == '\n', (void) 0);
-    (*counter)++;
+    SkipSpaces(str, counter);
 
     GetSomething(str, node_p->right, counter, answers_list);
 
-    CHECKUS(str[*counter] == '\n', (void) 0);
-    (*counter)++;
-    CHECKUS(str[*counter] == '}', (void) 0);
-    (*counter)++;
+    SkipSpaces(str, counter);
+    CheckChar('}', str, counter);
 }
 
 void GetAnswer(char* str, tree_node* node_p, int* counter, tree_node** answers_list)
 {
     CHECKUS(node_p != NULL, (void) 0);
-    sscanf(&str[*counter], "%m[^\n]", &node_p->data);
+    sscanf(&str[*counter], "%m[^\r\n]", &node_p->data);
     *counter += strlen(node_p->data);
 
     AddNodeToList(answers_list, node_p);
@@ -93,8 +93,72 @@ void AddNodeToList(tree_node** answers_list, tree_node* node_p)
     answers_list[i] = node_p;
 }
 
+int SkipSpaces(char* str, int* counter)
+{
+    CHECKUS(str != NULL, 1);
+    CHECKUS(counter != NULL, 1);
+
+    while (isspace(str[*counter]))
+    {
+        (*counter)++;
+    }
+    return 0;
+}
+
+int CheckChar(const char the_char, char* str, int* counter)
+{
+    CHECKUS(str != NULL, 1);
+    CHECKUS(counter != NULL, 1);
+    if (str[*counter] != the_char)
+    {
+        printf(BRIGHT "Syntax error (expected \'");
+        PrintChar(the_char);
+        printf("\'):\n");
+
+        int local_counter = *counter - SIMBOLS_AMOUNT_FOR_ERROR;
+        if (local_counter < 0)
+        {
+            local_counter = 0;
+        }
+        while (str[local_counter] != '\0' && local_counter < *counter + SIMBOLS_AMOUNT_FOR_ERROR)
+        {
+            if (local_counter == *counter)
+            {
+                printf(RED);
+            }
+            PrintChar(str[local_counter]);
+            if (local_counter == *counter)
+            {
+                printf(CLR_COLOR);
+            }
+            local_counter++;
+        }
+        printf("\n");
+        exit(1);
+    }
+    (*counter)++;
+    return 0;
+}
 
 
+void PrintChar(const char the_char)
+{
+    switch (the_char)
+    {
+        case '\n':
+            printf("\\n");
+            break;
+        case '\r':
+            printf("\\r");
+            break;
+        case '\t':
+            printf("\\t");
+            break;
+        default:
+            printf("%c", the_char);
+            break;
+   }
+}
 
 char* ReadFile(FILE* text_input)
 {
@@ -123,7 +187,7 @@ int CountSimbols(FILE* text_input)
     return simbol_amount;
 }
 
-int Akenator(data_base* data_p)
+int Akinator(data_base* data_p)
 {
     tree_node* node_p = data_p->tree;
     while (1)
@@ -194,11 +258,20 @@ int AddQuestionNode(tree_node* node_p)
 int PrintOrigin(data_base* data_p, const char* str)
 {
     CHECKUS(data_p != NULL, 1);
+    CHECKUS(str != NULL, 1);
+
+    char* local_str = strdup(str);
+    CHECKUS(local_str != NULL, 1);
+
+    if (islower(local_str[0]))
+    {
+        local_str[0] -= 32;
+    }
 
     tree_node* buf_node_p = 0;
     for (int i = 0; data_p->answers_list[i] != 0; i++)
     {
-        if (strcmp(str, data_p->answers_list[i]->data) == 0)
+        if (strcmp(local_str, data_p->answers_list[i]->data) == 0)
         {
             buf_node_p = data_p->answers_list[i];
             break;
@@ -206,25 +279,34 @@ int PrintOrigin(data_base* data_p, const char* str)
     }
     if (buf_node_p == 0) // did not find
     {
-        printf("Cannot find <%s> in data base\n", str);
+        printf(MAGENTA "- Cannot find <" INTENSE_GREEN "%s" MAGENTA "> in data base <%s>\n\n" CLR_COLOR, local_str, data_p->name);
+        free(local_str);
         return 1;
     }
 
-    printf(MAGENTA "- Defenition of %s:\n" CLR_COLOR, str);
-    PrintParents(buf_node_p->parent);
+    printf(MAGENTA "- Definition of " INTENSE_GREEN "%s" MAGENTA ":\n" CLR_COLOR, local_str);
+    PrintParents(buf_node_p->parent, buf_node_p);
     printf("\n");
+    free(local_str);
     return 0;
 }
 
-int PrintParents(tree_node* node_p)
+int PrintParents(tree_node* node_p, tree_node* previous_node_p)
 {
     CHECKUS(node_p != NULL, 1);
 
     if (node_p->parent != 0)
     {
-        PrintParents(node_p->parent);
+        PrintParents(node_p->parent, node_p);
     }
-    printf("%s\n", node_p->data);
+    if (node_p->left == previous_node_p)
+    {
+        printf(BRIGHT RED "(-) " NRM "Not %s\n", node_p->data);
+    }
+    else
+    {
+        printf(BRIGHT GREEN "(+) " NRM "%s\n", node_p->data);
+    }
     return 0;
 }
 
@@ -338,9 +420,15 @@ char* ScanStringColor(const char* color)
     return &str[first_letter]; // may be dangerous to return different pointer from that was calloced
 }
 
-int SaveDataToFile(data_base* data_p, FILE* file)
+int SaveDataToFile(data_base* data_p, const char* file_name)
 {
-    SaveTreeToFile(data_p->tree, file);
+    FILE* save_file = fopen(file_name, "w");
+    if (save_file == NULL)
+    {
+        return 1;
+    }
+    SaveTreeToFile(data_p->tree, save_file);
+    fclose(save_file);
     return 0;
 }
 
@@ -386,11 +474,7 @@ int FreeTree(tree_node* node_p)
     }
 
     free(node_p->data);
-
-    if (node_p->parent != 0)
-    {
-        free(node_p);
-    }
+    free(node_p);
     return 0;
 }
 

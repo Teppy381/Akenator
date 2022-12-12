@@ -1,0 +1,29 @@
+{
+Has two eyes?
+{
+Loves money?
+{
+Has long arms?
+Steve
+Jorge
+}
+{
+Has a cool name?
+John
+Stuart
+}
+}
+{
+Looks cute?
+{
+Has big brain?
+Phil
+Kevin
+}
+{
+High?
+Bob
+Dave
+}
+}
+}

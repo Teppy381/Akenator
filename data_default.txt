@@ -1,0 +1,41 @@
+{
+Has eyes?
+{
+Stupid?
+{
+Is higher 100 meters?
+Panorama
+{
+Is in Moscow?
+Empire State Building
+One Tower (in Moscow-city)
+}
+}
+{
+Animal?
+{
+Carries the toilet hith him?
+Sirenogoloviy
+Unitazogoloviy
+}
+{
+Has a lot of muscles?
+Blind cat
+Strong mole
+}
+}
+}
+{
+Can spin?
+{
+Knows matan?
+Cartoon Cat
+Znamenskaya
+}
+{
+Can dance?
+Spiner
+Breakdancer
+}
+}
+}
